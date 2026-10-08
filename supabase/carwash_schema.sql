@@ -114,7 +114,7 @@ create table public.business_settings (
   wa_provider             public.wa_provider not null default 'evolution',
   wa_country_code         text        not null default '51',
   nps_delay_minutes       int         not null default 120 check (nps_delay_minutes >= 0),
-  public_portal_url       text        not null default 'https://sistemacarwash.vercel.app',
+  public_portal_url       text        not null default 'https://...',
   updated_at              timestamptz not null default now()
 );
 
