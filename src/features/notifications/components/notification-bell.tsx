@@ -53,11 +53,17 @@ export function NotificationBell() {
   }, [supabase, qc]);
 
   useEffect(() => {
-    const onClick = (e: MouseEvent) => {
+    // pointerdown cubre mouse y toque (en iOS "mousedown" no siempre se dispara al tocar fuera)
+    const onPointer = (e: PointerEvent) => {
       if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
     };
-    document.addEventListener("mousedown", onClick);
-    return () => document.removeEventListener("mousedown", onClick);
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
+    document.addEventListener("pointerdown", onPointer);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("pointerdown", onPointer);
+      document.removeEventListener("keydown", onKey);
+    };
   }, []);
 
   const unread = data.filter((n) => !n.read_at);
@@ -85,7 +91,11 @@ export function NotificationBell() {
         )}
       </Button>
       {open && (
-        <div className="absolute right-0 z-40 mt-2 w-[min(360px,calc(100vw-24px))] overflow-hidden rounded-2xl border border-line-strong bg-surface-2 shadow-2xl">
+        <div
+          // Móvil: panel fijo a lo ancho de la pantalla (anclado a la campana se salía por la izquierda).
+          // sm+: desplegable clásico bajo la campana.
+          className="fixed inset-x-3 top-[calc(env(safe-area-inset-top)+3.75rem)] z-40 overflow-hidden rounded-2xl border border-line bg-surface shadow-2xl sm:absolute sm:inset-x-auto sm:top-full sm:right-0 sm:mt-2 sm:w-[360px]"
+        >
           <div className="flex items-center justify-between border-b border-line px-4 py-3">
             <p className="text-sm font-semibold">Alertas</p>
             <button className="text-xs font-semibold text-cyan hover:underline" onClick={markAllRead}>

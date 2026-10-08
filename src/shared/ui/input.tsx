@@ -1,8 +1,10 @@
 import { forwardRef, useEffect, useState, type InputHTMLAttributes, type ReactNode, type SelectHTMLAttributes, type TextareaHTMLAttributes } from "react";
 import { cn } from "@/shared/lib/utils";
 
+// En móvil la letra es de 16 px: con menos, Safari (iOS) hace zoom automático al tocar el campo
+// y la página queda ampliada y desalineada con el encabezado.
 const fieldBase =
-  "w-full rounded-xl border border-line-strong bg-surface px-3.5 text-[15px] text-fg placeholder:text-fg-subtle transition-colors hover:border-line-strong focus:border-cyan focus:outline-none focus:ring-2 focus:ring-cyan/25 disabled:opacity-50 aria-[invalid=true]:border-rose";
+  "w-full rounded-xl border border-line-strong bg-surface px-3.5 text-base text-fg sm:text-[15px] placeholder:text-fg-subtle transition-colors hover:border-line-strong focus:border-cyan focus:outline-none focus:ring-2 focus:ring-cyan/25 disabled:opacity-50 aria-[invalid=true]:border-rose";
 
 export const Input = forwardRef<HTMLInputElement, InputHTMLAttributes<HTMLInputElement>>(
   ({ className, ...props }, ref) => <input ref={ref} className={cn(fieldBase, "h-11", className)} {...props} />,

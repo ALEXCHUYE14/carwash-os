@@ -208,7 +208,7 @@ function ServicesTable() {
               </Td>
               <Td>
                 <div className="flex gap-1.5">
-                  <Select className="h-9 w-20 text-sm" value={val(s, "commission_type")} onChange={(e) => patch(s.id, { commission_type: e.target.value as CommissionType })}>
+                  <Select className="h-9 w-20 text-base sm:text-sm" value={val(s, "commission_type")} onChange={(e) => patch(s.id, { commission_type: e.target.value as CommissionType })}>
                     <option value="percentage">%</option>
                     <option value="fixed">S/</option>
                   </Select>
@@ -467,7 +467,7 @@ function TeamSection() {
                     {locked ? (
                       <Badge>{ROLE_LABEL[u.role]}</Badge>
                     ) : (
-                      <Select className="h-9 w-44 text-sm" value={u.role} onChange={(e) => setRole.mutate({ id: u.id, role: e.target.value as UserRole })}>
+                      <Select className="h-9 w-44 text-base sm:text-sm" value={u.role} onChange={(e) => setRole.mutate({ id: u.id, role: e.target.value as UserRole })}>
                         {assignableRoles.map((r) => (
                           <option key={r} value={r}>
                             {ROLE_LABEL[r]}

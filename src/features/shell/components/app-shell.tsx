@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import type { ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { NAV_ITEMS, ROLE_LABEL, type NavIcon } from "@/features/auth/lib/rbac";
 import { useSession } from "@/features/auth/hooks/use-session";
 import { NotificationBell } from "@/features/notifications/components/notification-bell";
@@ -47,14 +47,24 @@ export function AppShell({ children }: { children: ReactNode }) {
   const mobileItems = items.filter((i) => i.mobile).slice(0, 5);
   const isActive = (href: string) => pathname === href || pathname.startsWith(`${href}/`);
 
+  const [signingOut, setSigningOut] = useState(false);
+  const currentLabel = items.find((i) => isActive(i.href))?.label ?? "";
+
   const signOut = async () => {
-    await getSupabase().auth.signOut();
-    router.replace("/login");
-    router.refresh();
+    if (signingOut) return;
+    setSigningOut(true);
+    try {
+      await getSupabase().auth.signOut();
+    } finally {
+      // Aunque falle la red, se sale al login: el middleware no deja entrar sin sesión válida.
+      router.replace("/login");
+      router.refresh();
+    }
   };
 
   return (
-    <div className="min-h-dvh lg:pl-64">
+    // overflow-x-clip: ningún elemento ancho puede crear scroll horizontal (y no rompe el sticky)
+    <div className="min-h-dvh overflow-x-clip lg:pl-64">
       {/* ---------- Sidebar (desktop / tablet horizontal) ---------- */}
       <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 flex-col border-r border-line bg-surface lg:flex">
         <div className="flex h-16 items-center gap-2.5 px-5">
@@ -100,24 +110,26 @@ export function AppShell({ children }: { children: ReactNode }) {
         </div>
       </aside>
 
-      {/* ---------- Top bar ---------- */}
-      <header className="sticky top-0 z-20 flex h-16 items-center justify-between gap-3 border-b border-line bg-bg/85 px-4 backdrop-blur-md sm:px-6">
-        <div className="flex items-center gap-2.5 lg:hidden">
-          <BrandLogo className="h-10 w-[54px]" />
-          <span className="font-bold tracking-tight">CarWash OS</span>
-        </div>
-        <div className="hidden text-sm text-fg-subtle lg:block">
-          {items.find((i) => isActive(i.href))?.label ?? ""}
-        </div>
-        <div className="flex items-center gap-1">
-          <NotificationBell />
-          <button
-            onClick={signOut}
-            className="grid size-11 place-items-center rounded-xl text-fg-subtle hover:bg-surface-2 hover:text-rose lg:hidden"
-            aria-label="Cerrar sesión"
-          >
-            <LogOut className="size-4" />
-          </button>
+      {/* ---------- Top bar ----------
+          Fondo sólido (no translúcido) y ancho completo; respeta el notch/barra de estado del iPhone
+          (viewportFit: "cover") con safe-area-inset-top. */}
+      <header className="sticky top-0 z-30 w-full border-b border-line bg-surface/95 pt-[env(safe-area-inset-top)] shadow-[0_1px_2px_rgb(30_36_34/0.04)] backdrop-blur-md supports-[backdrop-filter]:bg-surface/85">
+        <div className="flex h-14 items-center justify-between gap-2 px-3 sm:h-16 sm:px-6">
+          {/* Marca + sección actual (móvil / tablet vertical) */}
+          <Link href={items[0]?.href ?? "/"} className="flex min-w-0 items-center gap-2.5 lg:hidden" aria-label="Inicio">
+            <BrandLogo priority className="h-9 w-12 rounded-lg sm:h-10 sm:w-[54px] sm:rounded-xl" />
+            <span className="flex min-w-0 flex-col leading-tight">
+              <span className="truncate text-[15px] font-bold tracking-tight">CarWash OS</span>
+              {currentLabel && <span className="truncate text-xs font-medium text-fg-subtle">{currentLabel}</span>}
+            </span>
+          </Link>
+          {/* Desktop: título de la sección */}
+          <p className="hidden truncate text-sm font-semibold text-fg-muted lg:block">{currentLabel}</p>
+
+          <div className="flex shrink-0 items-center gap-0.5">
+            <NotificationBell />
+            <UserMenu name={profile.full_name || profile.email || ""} role={ROLE_LABEL[profile.role]} onSignOut={signOut} signingOut={signingOut} />
+          </div>
         </div>
       </header>
 
@@ -146,6 +158,74 @@ export function AppShell({ children }: { children: ReactNode }) {
           })}
         </ul>
       </nav>
+    </div>
+  );
+}
+
+/** Menú del usuario (móvil / tablet vertical): evita cerrar sesión por un toque accidental. */
+function UserMenu({
+  name,
+  role,
+  onSignOut,
+  signingOut,
+}: {
+  name: string;
+  role: string;
+  onSignOut: () => void;
+  signingOut: boolean;
+}) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const onPointer = (e: PointerEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
+    document.addEventListener("pointerdown", onPointer);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("pointerdown", onPointer);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [open]);
+
+  return (
+    <div ref={ref} className="relative lg:hidden">
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        aria-haspopup="menu"
+        aria-expanded={open}
+        aria-label="Menú de usuario"
+        className="grid size-11 place-items-center rounded-xl hover:bg-surface-2"
+      >
+        <span className="grid size-8 place-items-center rounded-full bg-cyan text-xs font-bold text-white">
+          {initials(name)}
+        </span>
+      </button>
+      {open && (
+        <div
+          role="menu"
+          className="absolute top-full right-0 z-40 mt-2 w-64 max-w-[calc(100vw-24px)] overflow-hidden rounded-2xl border border-line bg-surface shadow-xl"
+        >
+          <div className="border-b border-line px-4 py-3">
+            <p className="truncate text-sm font-semibold">{name || "Usuario"}</p>
+            <p className="text-xs text-fg-subtle">{role}</p>
+          </div>
+          <button
+            type="button"
+            role="menuitem"
+            onClick={onSignOut}
+            disabled={signingOut}
+            className="flex h-12 w-full items-center gap-3 px-4 text-sm font-medium text-rose hover:bg-rose-soft disabled:opacity-50"
+          >
+            <LogOut className="size-4" />
+            {signingOut ? "Cerrando sesión…" : "Cerrar sesión"}
+          </button>
+        </div>
+      )}
     </div>
   );
 }

@@ -113,7 +113,7 @@ function TemplateDialog({ tpl, onClose }: { tpl: WhatsappTemplate | null; onClos
           <Input value={draft.name} onChange={(e) => setDraft({ ...draft, name: e.target.value })} />
         </Field>
         <Field label="Mensaje">
-          <Textarea value={draft.body} onChange={(e) => setDraft({ ...draft, body: e.target.value })} className="min-h-[140px] font-mono text-[13px]" />
+          <Textarea value={draft.body} onChange={(e) => setDraft({ ...draft, body: e.target.value })} className="min-h-[140px] font-mono text-base sm:text-[13px]" />
         </Field>
         <div className="flex flex-wrap gap-1.5">
           {TEMPLATE_VARIABLES.map((v) => (
