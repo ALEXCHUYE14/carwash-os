@@ -1,7 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Eye, EyeOff, MessageCircle, ShieldCheck } from "lucide-react";
+import { Eye, EyeOff, ShieldCheck } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
@@ -164,7 +164,6 @@ export function LoginForm() {
             title={`WhatsApp ${SUPPORT_WHATSAPP_DISPLAY}`}
             className="inline-flex min-h-11 items-center gap-2 rounded-lg px-2 text-[15px] font-medium text-[#14805e] underline-offset-4 transition-colors hover:text-[#0f6b4e] hover:underline"
           >
-            <MessageCircle className="size-[18px] shrink-0" aria-hidden />
             ¿Problemas para acceder? Contactar soporte
           </a>
         </div>
