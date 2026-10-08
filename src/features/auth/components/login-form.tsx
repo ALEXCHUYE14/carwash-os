@@ -1,13 +1,14 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Droplets, Eye, EyeOff, MessageCircle, ShieldCheck } from "lucide-react";
+import { Eye, EyeOff, MessageCircle, ShieldCheck } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { getSupabase } from "@/shared/lib/supabase/client";
 import { SUPPORT_WHATSAPP_DISPLAY, supportWhatsappUrl } from "@/shared/lib/support";
+import { BrandLogo } from "@/shared/ui/brand-logo";
 import { Button } from "@/shared/ui/button";
 import { Field, Input } from "@/shared/ui/input";
 
@@ -87,9 +88,7 @@ export function LoginForm() {
     <div className="w-full max-w-[400px]">
       <div className="rounded-2xl border border-white/40 bg-surface/95 p-7 shadow-2xl backdrop-blur-md sm:p-8">
         <div className="mb-7 flex items-center gap-3">
-          <div className="grid size-11 place-items-center rounded-2xl bg-cyan text-white shadow-sm">
-            <Droplets className="size-5" />
-          </div>
+          <BrandLogo priority className="h-14 w-[76px] rounded-2xl shadow-sm" />
           <div>
             <h1 className="text-lg font-bold tracking-tight">CarWash OS</h1>
             <p className="text-[13px] text-fg-subtle">Ingresa con tu cuenta de personal</p>

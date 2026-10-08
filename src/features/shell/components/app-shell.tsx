@@ -6,7 +6,6 @@ import {
   CalendarClock,
   Car,
   ClipboardPlus,
-  Droplets,
   KanbanSquare,
   LogOut,
   MessageCircle,
@@ -23,6 +22,7 @@ import { NAV_ITEMS, ROLE_LABEL, type NavIcon } from "@/features/auth/lib/rbac";
 import { useSession } from "@/features/auth/hooks/use-session";
 import { NotificationBell } from "@/features/notifications/components/notification-bell";
 import { getSupabase } from "@/shared/lib/supabase/client";
+import { BrandLogo } from "@/shared/ui/brand-logo";
 import { cn, initials } from "@/shared/lib/utils";
 
 const ICONS: Record<NavIcon, LucideIcon> = {
@@ -58,9 +58,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       {/* ---------- Sidebar (desktop / tablet horizontal) ---------- */}
       <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 flex-col border-r border-line bg-surface lg:flex">
         <div className="flex h-16 items-center gap-2.5 px-5">
-          <div className="grid size-9 place-items-center rounded-xl bg-cyan-soft text-cyan ring-1 ring-cyan/30">
-            <Droplets className="size-[18px]" />
-          </div>
+          <BrandLogo className="h-10 w-[54px]" />
           <span className="font-bold tracking-tight">CarWash OS</span>
         </div>
         <nav className="scrollbar-thin flex-1 space-y-0.5 overflow-y-auto px-3 py-2">
@@ -105,9 +103,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       {/* ---------- Top bar ---------- */}
       <header className="sticky top-0 z-20 flex h-16 items-center justify-between gap-3 border-b border-line bg-bg/85 px-4 backdrop-blur-md sm:px-6">
         <div className="flex items-center gap-2.5 lg:hidden">
-          <div className="grid size-9 place-items-center rounded-xl bg-cyan-soft text-cyan ring-1 ring-cyan/30">
-            <Droplets className="size-[18px]" />
-          </div>
+          <BrandLogo className="h-10 w-[54px]" />
           <span className="font-bold tracking-tight">CarWash OS</span>
         </div>
         <div className="hidden text-sm text-fg-subtle lg:block">

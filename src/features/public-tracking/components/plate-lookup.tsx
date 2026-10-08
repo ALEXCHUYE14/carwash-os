@@ -1,6 +1,7 @@
 "use client";
 
-import { Clock, Droplets, MapPin, Search, Ticket } from "lucide-react";
+import { Clock, MapPin, Search, Ticket } from "lucide-react";
+import { BrandLogo } from "@/shared/ui/brand-logo";
 import Link from "next/link";
 import { useState } from "react";
 import { formatTime } from "@/shared/lib/format";
@@ -37,9 +38,7 @@ export function PlateLookup() {
   return (
     <div className="mx-auto w-full max-w-md">
       <div className="mb-8 text-center">
-        <div className="mx-auto mb-4 grid size-14 place-items-center rounded-2xl bg-cyan-soft text-cyan ring-1 ring-cyan/30">
-          <Droplets className="size-6" />
-        </div>
+        <BrandLogo priority className="mx-auto mb-4 h-20 w-28 rounded-2xl" />
         <h1 className="text-2xl font-bold tracking-tight">¿Cómo va mi auto?</h1>
         <p className="mt-1 text-sm text-fg-muted">Ingresa tu placa y sigue el avance en tiempo real.</p>
       </div>
