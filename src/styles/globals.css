@@ -1,0 +1,97 @@
+@import "tailwindcss";
+
+/* =========================================================================
+   CarWash OS · Design tokens (tema claro "Natural": arena + agua)
+   Los nombres de color se mantienen por compatibilidad, su rol es semántico:
+   cyan = marca / en proceso · emerald = listo · amber = advertencia
+   rose = retraso / peligro · violet = control de calidad
+   Todos los tonos de texto cumplen WCAG AA (≥ 4.5:1) sobre surface y bg.
+   ========================================================================= */
+@theme {
+  --font-sans: var(--font-jakarta), "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+
+  --color-bg: #f5f4f0;
+  --color-surface: #ffffff;
+  --color-surface-2: #f4f3ef;
+  --color-surface-3: #ebe9e3;
+  --color-line: #e5e2db;
+  --color-line-strong: #d2cec5;
+
+  --color-fg: #1e2422;
+  --color-fg-muted: #4f5753;
+  --color-fg-subtle: #6a716d;
+
+  --color-cyan: #1d6b74;
+  --color-cyan-hover: #175961;
+  --color-cyan-soft: rgb(29 107 116 / 0.09);
+  --color-emerald: #2e7a4d;
+  --color-emerald-hover: #256640;
+  --color-emerald-soft: rgb(46 122 77 / 0.1);
+  --color-amber: #9a5b0a;
+  --color-amber-hover: #834d08;
+  --color-amber-soft: rgb(196 132 29 / 0.13);
+  --color-rose: #b2443a;
+  --color-rose-hover: #993a31;
+  --color-rose-soft: rgb(178 68 58 / 0.09);
+  --color-violet: #66549a;
+  --color-violet-soft: rgb(102 84 154 / 0.1);
+
+  --radius-xl: 0.75rem;
+  --radius-2xl: 1rem;
+
+  --shadow-glow-cyan: 0 0 0 1px rgb(29 107 116 / 0.35), 0 6px 18px -8px rgb(29 107 116 / 0.35);
+  --shadow-card: 0 1px 2px rgb(30 36 34 / 0.04), 0 2px 8px -4px rgb(30 36 34 / 0.06);
+
+  --animate-pulse-ring: pulse-ring 1.8s ease-out infinite;
+  @keyframes pulse-ring {
+    0% { box-shadow: 0 0 0 0 rgb(178 68 58 / 0.45); }
+    100% { box-shadow: 0 0 0 10px rgb(178 68 58 / 0); }
+  }
+}
+
+@layer base {
+  html {
+    color-scheme: light;
+    -webkit-tap-highlight-color: transparent;
+  }
+  body {
+    @apply bg-bg text-fg font-sans antialiased;
+    font-feature-settings: "cv11", "ss01";
+  }
+  ::selection {
+    background: rgb(29 107 116 / 0.18);
+  }
+  * {
+    border-color: var(--color-line);
+  }
+  input[type="number"]::-webkit-inner-spin-button,
+  input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-cyan);
+    outline-offset: 2px;
+  }
+}
+
+@utility tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+@utility scrollbar-thin {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-line-strong) transparent;
+}
+
+@utility safe-bottom {
+  padding-bottom: max(env(safe-area-inset-bottom), 0.5rem);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

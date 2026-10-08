@@ -1,0 +1,15 @@
+project_id = "carwash-os"
+
+# Configuración de Supabase CLI para las Edge Functions.
+# Deploy:  supabase functions deploy whatsapp-worker whatsapp-webhook staff-invite
+
+[functions.whatsapp-worker]
+# Se autentica con SERVICE_ROLE_KEY o x-worker-secret dentro de la función
+verify_jwt = false
+
+[functions.whatsapp-webhook]
+# Meta / Twilio / Evolution no envían JWT de Supabase
+verify_jwt = false
+
+[functions.staff-invite]
+verify_jwt = true
