@@ -74,16 +74,26 @@ export async function middleware(request: NextRequest) {
     return redirectTo("/login", `?next=${encodeURIComponent(pathname)}`);
   }
 
-  const role = await resolveRole(request, response, supabase, userId);
+  // Si una página del servidor ya rechazó la sesión (?error=…), se muestra el login sin
+  // redirigir: así el middleware nunca puede "rebotar" contra esa página en un bucle.
+  if (pathname === "/login" && request.nextUrl.searchParams.has("error")) {
+    response.cookies.delete(ROLE_COOKIE);
+    return response;
+  }
 
-  if (pathname === "/login" || pathname === "/") {
+  // En el login y en "/" el rol se lee SIEMPRE fresco de la BD (no de la cookie): es el punto
+  // de entrada y una cookie desactualizada (rol recién cambiado) causaría redirecciones en bucle.
+  const isEntry = pathname === "/login" || pathname === "/";
+  const role = await resolveRole(request, response, supabase, userId, isEntry);
+
+  if (isEntry) {
     if (!role) return response;
     return redirectTo(homeFor(role));
   }
 
   if (pathname.startsWith("/mi-cuenta")) {
     if (role === "customer") return response;
-    return redirectTo(role ? homeFor(role) : "/login");
+    return role ? redirectTo(homeFor(role)) : redirectTo("/login", "?error=inactive");
   }
 
   if (isProtected && !canAccess(role, pathname)) {
@@ -98,8 +108,9 @@ async function resolveRole(
   response: NextResponse,
   supabase: SupabaseClient,
   userId: string,
+  fresh = false,
 ): Promise<UserRole | null> {
-  const cached = request.cookies.get(ROLE_COOKIE)?.value;
+  const cached = fresh ? undefined : request.cookies.get(ROLE_COOKIE)?.value;
   if (cached) {
     const [cachedUser, cachedRole] = cached.split(":");
     if (cachedUser === userId && KNOWN_ROLES.includes(cachedRole as UserRole)) return cachedRole as UserRole;

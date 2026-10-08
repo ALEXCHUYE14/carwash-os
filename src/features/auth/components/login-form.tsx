@@ -42,7 +42,9 @@ export function LoginForm() {
       ? "Tu usuario no tiene un rol activo. Contacta a gerencia o a soporte."
       : params.get("error") === "link"
         ? "El enlace del correo expiró o ya fue usado. Solicita uno nuevo."
-        : null,
+        : params.get("error") === "session"
+          ? "Tu sesión expiró o se cerró en otro dispositivo. Vuelve a ingresar."
+          : null,
   );
   const [notice, setNotice] = useState<string | null>(null);
   const [sendingReset, setSendingReset] = useState(false);

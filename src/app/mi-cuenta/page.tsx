@@ -15,7 +15,10 @@ export const dynamic = "force-dynamic";
 /** Portal del cliente con login: RLS limita todo a su propio customer_id. */
 export default async function MiCuentaPage() {
   const profile = await getCurrentProfile();
-  if (!profile || profile.role !== "customer") redirect("/login");
+  // Ver (staff)/layout.tsx: destinos que no pueden generar un bucle con el middleware.
+  if (!profile) redirect("/login?error=session");
+  if (!profile.is_active) redirect("/login?error=inactive");
+  if (profile.role !== "customer") redirect("/");
 
   const sb = await getServerSupabase();
   const [{ data: orders }, { data: card }] = await Promise.all([
