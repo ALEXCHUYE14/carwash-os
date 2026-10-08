@@ -29,6 +29,19 @@ export async function middleware(request: NextRequest) {
     );
   }
 
+  const { pathname } = request.nextUrl;
+  const isPublic = PUBLIC_PREFIXES.some((p) => pathname.startsWith(p));
+  const isProtected =
+    pathname === "/" ||
+    pathname.startsWith("/mi-cuenta") ||
+    ROUTE_ROLES.some((r) => pathname === r.prefix || pathname.startsWith(`${r.prefix}/`));
+
+  // Páginas públicas (seguimiento, ticket, /auth) y rutas desconocidas no consultan Supabase:
+  // cada llamada evitada es una línea menos en los logs del proyecto.
+  if (pathname !== "/login" && (isPublic || !isProtected)) {
+    return NextResponse.next({ request });
+  }
+
   let response = NextResponse.next({ request });
 
   const supabase = createServerClient(url, key, {
@@ -45,13 +58,6 @@ export async function middleware(request: NextRequest) {
   const { data: claimsData } = await supabase.auth.getClaims();
   const userId = (claimsData?.claims?.sub as string | undefined) ?? null;
 
-  const { pathname } = request.nextUrl;
-  const isPublic = PUBLIC_PREFIXES.some((p) => pathname.startsWith(p));
-  const isProtected =
-    pathname === "/" ||
-    pathname.startsWith("/mi-cuenta") ||
-    ROUTE_ROLES.some((r) => pathname === r.prefix || pathname.startsWith(`${r.prefix}/`));
-
   // Redirecciones que conservan las cookies de sesión recién refrescadas.
   const redirectTo = (pathnameTo: string, search = "") => {
     const target = request.nextUrl.clone();
@@ -64,11 +70,9 @@ export async function middleware(request: NextRequest) {
 
   if (!userId) {
     if (request.cookies.has(ROLE_COOKIE)) response.cookies.delete(ROLE_COOKIE);
-    if (isPublic || !isProtected) return response;
+    if (pathname === "/login") return response;
     return redirectTo("/login", `?next=${encodeURIComponent(pathname)}`);
   }
-
-  if (isPublic && pathname !== "/login") return response;
 
   const role = await resolveRole(request, response, supabase, userId);
 

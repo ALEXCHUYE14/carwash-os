@@ -1,7 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Droplets, Eye, EyeOff, MessageCircle } from "lucide-react";
+import { Droplets, Eye, EyeOff, MessageCircle, ShieldCheck } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
@@ -12,7 +12,8 @@ import { Button } from "@/shared/ui/button";
 import { Field, Input } from "@/shared/ui/input";
 
 const schema = z.object({
-  email: z.email("Correo inválido"),
+  // trim antes de validar: el autocompletado del celular suele añadir un espacio al final
+  email: z.string().trim().toLowerCase().pipe(z.email("Correo inválido")),
   password: z.string().min(6, "Mínimo 6 caracteres"),
 });
 type Values = z.infer<typeof schema>;
@@ -51,19 +52,24 @@ export function LoginForm() {
     setNotice(null);
     if (!(await trigger("email"))) return;
     setSendingReset(true);
-    const { error: err } = await getSupabase().auth.resetPasswordForEmail(getValues("email").trim().toLowerCase(), {
-      redirectTo: `${window.location.origin}/auth/confirm?next=/auth/set-password`,
-    });
-    setSendingReset(false);
-    if (err) return setError(translateAuthError(err.message));
-    setNotice("Si el correo está registrado, recibirás un enlace para crear una nueva contraseña.");
+    try {
+      const { error: err } = await getSupabase().auth.resetPasswordForEmail(getValues("email").trim().toLowerCase(), {
+        redirectTo: `${window.location.origin}/auth/confirm?next=/auth/set-password`,
+      });
+      if (err) return setError(translateAuthError(err.message));
+      setNotice("Si el correo está registrado, recibirás un enlace para crear una nueva contraseña.");
+    } catch (e) {
+      setError(translateAuthError(e instanceof Error ? e.message : "No se pudo enviar el enlace."));
+    } finally {
+      setSendingReset(false);
+    }
   };
 
   const onSubmit = handleSubmit(async (values) => {
     setError(null);
     try {
       const { error: err } = await getSupabase().auth.signInWithPassword({
-        email: values.email.trim().toLowerCase(),
+        email: values.email,
         password: values.password,
       });
       if (err) {
@@ -145,18 +151,21 @@ export function LoginForm() {
           </Button>
         </form>
 
-        <div className="mt-6 border-t border-line pt-5 text-center">
-          <p className="text-[13px] text-fg-subtle">¿Problemas para ingresar?</p>
+        <div className="mt-6 flex flex-col items-center gap-2.5 text-center">
+          <p className="inline-flex items-center gap-1.5 text-[13px] text-[#5b7c99]">
+            <ShieldCheck className="size-4 shrink-0" aria-hidden />
+            Acceso exclusivo del personal autorizado
+          </p>
           <a
             href={supportWhatsappUrl()}
             target="_blank"
             rel="noopener noreferrer"
-            className="mt-2 inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-[#25d366]/40 bg-[#25d366]/10 px-4 text-sm font-semibold text-[#128c4b] transition-colors hover:bg-[#25d366]/20"
+            title={`WhatsApp ${SUPPORT_WHATSAPP_DISPLAY}`}
+            className="inline-flex min-h-11 items-center gap-2 rounded-lg px-2 text-[15px] font-medium text-[#14805e] underline-offset-4 transition-colors hover:text-[#0f6b4e] hover:underline"
           >
-            <MessageCircle className="size-4" />
-            Contactar con soporte
+            <MessageCircle className="size-[18px] shrink-0" aria-hidden />
+            ¿Problemas para acceder? Contactar soporte
           </a>
-          <p className="mt-1.5 text-xs text-fg-subtle">WhatsApp {SUPPORT_WHATSAPP_DISPLAY}</p>
         </div>
       </div>
 

@@ -13,7 +13,7 @@ import { STATUS_META } from "@/shared/lib/labels";
 export function useBoard() {
   return useQuery({
     queryKey: qk.board,
-    refetchInterval: 60_000, // red de seguridad si se cae el websocket
+    refetchInterval: 5 * 60_000, // red de seguridad si se cae el websocket (los cambios llegan por Realtime)
     queryFn: async () =>
       unwrap(await getSupabase().from("v_kanban_board").select("*").order("received_at")) as KanbanCard[],
   });

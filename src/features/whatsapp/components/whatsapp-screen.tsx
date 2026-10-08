@@ -11,6 +11,7 @@ import { formatDateTime, relativeTime } from "@/shared/lib/format";
 import { WA_STATUS_META } from "@/shared/lib/labels";
 import { qk } from "@/shared/lib/query-keys";
 import { getSupabase } from "@/shared/lib/supabase/client";
+import { uniqueTopic } from "@/shared/lib/realtime";
 import { cn, displayPlate } from "@/shared/lib/utils";
 import type { VehicleSearchResult, WaEvent, WaStatus, WhatsappLog, WhatsappTemplate } from "@/shared/types/domain";
 import { Button } from "@/shared/ui/button";
@@ -230,10 +231,29 @@ export function WhatsappScreen() {
   const [editing, setEditing] = useState<WhatsappTemplate | null>(null);
   const [composing, setComposing] = useState(false);
 
+  // La cola se actualiza por Realtime (whatsapp_logs está en la publicación). Antes se consultaba
+  // cada 15 s, lo que generaba miles de peticiones diarias en los logs de Supabase.
+  useEffect(() => {
+    if (tab !== "outbox") return;
+    const sb = getSupabase();
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    const channel = sb
+      .channel(uniqueTopic("whatsapp-outbox"))
+      .on("postgres_changes", { event: "*", schema: "public", table: "whatsapp_logs" }, () => {
+        if (timer) clearTimeout(timer);
+        timer = setTimeout(() => void qc.invalidateQueries({ queryKey: ["whatsapp", "outbox"] }), 500);
+      })
+      .subscribe();
+    return () => {
+      if (timer) clearTimeout(timer);
+      void sb.removeChannel(channel);
+    };
+  }, [tab, qc]);
+
   const outbox = useQuery({
     queryKey: qk.whatsapp.outbox(status),
     enabled: tab === "outbox",
-    refetchInterval: 15_000,
+    refetchInterval: 5 * 60_000,
     queryFn: async () => {
       let req = getSupabase().from("whatsapp_logs").select("*").order("created_at", { ascending: false }).limit(150);
       if (status !== "all") req = req.eq("status", status);

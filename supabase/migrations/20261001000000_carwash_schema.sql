@@ -2567,5 +2567,10 @@ insert into public.whatsapp_templates (code, event, name, body, meta_param_order
 --        url     := 'https://<PROJECT_REF>.supabase.co/functions/v1/whatsapp-worker',
 --        headers := jsonb_build_object('Authorization', 'Bearer ' || '<SERVICE_ROLE_KEY via Vault>'),
 --        body    := '{}'::jsonb)
+--      where exists (select 1 from public.whatsapp_logs            -- solo si hay trabajo pendiente:
+--                    where (status = 'queued' and next_attempt_at <= now())   -- evita ~1.440 invocaciones
+--                       or (status = 'sending' and locked_at < now() - interval '5 minutes'))  -- y logs diarios
 --    $$);
+--    select cron.schedule('cron-history-cleanup', '30 3 * * *',
+--      $$ delete from cron.job_run_details where end_time < now() - interval '3 days' $$);
 --    select cron.schedule('wa-reminders', '0 * * * *', $$ select public.wa_enqueue_appointment_reminders(24) $$);

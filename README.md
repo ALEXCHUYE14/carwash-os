@@ -60,16 +60,28 @@ Secretos según el proveedor elegido en **Ajustes → Proveedor de WhatsApp**:
 supabase secrets set EVOLUTION_API_URL=https://... EVOLUTION_API_KEY=... EVOLUTION_INSTANCE=carwash WORKER_SECRET=...
 ```
 
-Programa el worker cada minuto (SQL Editor, requiere extensiones `pg_cron` y `pg_net`):
+Programa el worker (SQL Editor, requiere extensiones `pg_cron` y `pg_net`). La revisión es cada minuto,
+pero **solo invoca la Edge Function cuando hay mensajes pendientes**: así no se generan ~1.440 invocaciones
+y sus logs diarios en Supabase (Log Ingestion) con la cola vacía.
 ```sql
 select cron.schedule('wa-worker', '* * * * *', $$
   select net.http_post(
     url     := 'https://<ref>.supabase.co/functions/v1/whatsapp-worker',
     headers := jsonb_build_object('x-worker-secret', '<WORKER_SECRET>'),
     body    := '{}'::jsonb)
+  where exists (select 1 from public.whatsapp_logs
+                where (status = 'queued' and next_attempt_at <= now())
+                   or (status = 'sending' and locked_at < now() - interval '5 minutes'))
 $$);
 select cron.schedule('wa-reminders', '0 * * * *', $$ select public.wa_enqueue_appointment_reminders(24) $$);
+
+-- Limpieza diaria del historial de ejecuciones de pg_cron (si no, crece sin límite)
+select cron.schedule('cron-history-cleanup', '30 3 * * *', $$
+  delete from cron.job_run_details where end_time < now() - interval '3 days'
+$$);
 ```
+Si ya habías creado `wa-worker` con la versión anterior, vuelve a ejecutar el `cron.schedule('wa-worker', …)`
+de arriba: con el mismo nombre reemplaza la tarea existente.
 Webhook de estados (entregado/leído): `https://<ref>.supabase.co/functions/v1/whatsapp-webhook?provider=meta|twilio|evolution`.
 
 ## Arquitectura
