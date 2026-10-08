@@ -65,6 +65,15 @@
   * {
     border-color: var(--color-line);
   }
+  /* Responsive a prueba de desbordes: por defecto un hijo de grid y un campo de formulario no
+     pueden ser más angostos que su contenido, y en móvil eso ensanchaba la columna más allá de
+     la pantalla (tarjetas cortadas a la derecha). Con min-width: 0 se ajustan al ancho disponible. */
+  .grid > *,
+  input,
+  select,
+  textarea {
+    min-width: 0;
+  }
   input[type="number"]::-webkit-inner-spin-button,
   input[type="number"]::-webkit-outer-spin-button {
     -webkit-appearance: none;

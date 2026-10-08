@@ -75,7 +75,7 @@ export function PlateSearch({ error }: { error?: string }) {
           autoComplete="off"
           autoCapitalize="characters"
           spellCheck={false}
-          className="h-full flex-1 bg-transparent font-mono text-2xl font-bold tracking-[0.12em] placeholder:font-sans placeholder:text-base placeholder:font-normal placeholder:tracking-normal placeholder:text-fg-subtle focus:outline-none"
+          className="h-full w-full min-w-0 flex-1 bg-transparent font-mono text-xl font-bold tracking-[0.1em] sm:text-2xl sm:tracking-[0.12em] placeholder:font-sans placeholder:text-base placeholder:font-normal placeholder:tracking-normal placeholder:text-fg-subtle focus:outline-none"
         />
         {isFetching && <span className="size-4 animate-spin rounded-full border-2 border-cyan border-t-transparent" />}
       </div>

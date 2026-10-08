@@ -114,7 +114,7 @@ export function Field({
   children: ReactNode;
 }) {
   return (
-    <div className={cn("flex flex-col gap-1.5", className)}>
+    <div className={cn("flex min-w-0 flex-col gap-1.5", className)}>
       {label && <Label htmlFor={htmlFor}>{label}</Label>}
       {children}
       {error ? (

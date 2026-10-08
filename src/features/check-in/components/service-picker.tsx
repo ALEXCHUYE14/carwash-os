@@ -30,7 +30,7 @@ export function ServicePicker({ error }: { error?: string }) {
 
   return (
     <div className="space-y-5">
-      <div className="grid gap-2 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
         {main.map((s) => {
           const selected = serviceIds.includes(s.id);
           const { price, minutes } = estimateLine(s, vt, data.prices);
@@ -54,7 +54,7 @@ export function ServicePicker({ error }: { error?: string }) {
               >
                 {selected && <Check className="size-3.5" strokeWidth={3} />}
               </span>
-              <span className="pr-8 font-semibold">{s.name}</span>
+              <span className="pr-8 font-semibold break-words">{s.name}</span>
               {s.description && <span className="mt-0.5 line-clamp-1 text-xs text-fg-subtle">{s.description}</span>}
               <span className="mt-auto flex w-full items-end justify-between pt-2">
                 <span className="text-lg font-bold tabular">{money(price)}</span>
@@ -80,15 +80,15 @@ export function ServicePicker({ error }: { error?: string }) {
                   type="button"
                   onClick={() => toggleService(s.id)}
                   className={cn(
-                    "flex h-11 items-center gap-2 rounded-full border px-4 text-sm font-semibold transition-colors",
+                    "flex min-h-11 max-w-full items-center gap-2 rounded-full border px-4 py-2 text-left text-sm font-semibold transition-colors",
                     selected
                       ? "border-violet/60 bg-violet-soft text-violet"
                       : "border-line bg-surface-2 text-fg-muted hover:text-fg",
                   )}
                 >
-                  {selected ? <Check className="size-4" /> : <Plus className="size-4" />}
-                  {s.name}
-                  <span className="tabular opacity-80">{money(price)}</span>
+                  {selected ? <Check className="size-4 shrink-0" /> : <Plus className="size-4 shrink-0" />}
+                  <span className="min-w-0 break-words">{s.name}</span>
+                  <span className="shrink-0 tabular opacity-80">{money(price)}</span>
                 </button>
               );
             })}

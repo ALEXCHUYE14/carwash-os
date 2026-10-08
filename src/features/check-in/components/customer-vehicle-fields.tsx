@@ -24,14 +24,14 @@ export function VehicleTypePicker({ error }: { error?: string }) {
               type="button"
               onClick={() => setVehicle({ vehicle_type_id: t.id })}
               className={cn(
-                "flex h-20 flex-col items-center justify-center gap-1.5 rounded-xl border text-[13px] font-semibold transition-all",
+                "flex min-h-20 flex-col items-center justify-center gap-1.5 rounded-xl border px-2 py-2 text-center text-[13px] leading-tight font-semibold transition-all",
                 active
                   ? "border-cyan bg-cyan-soft text-cyan shadow-[var(--shadow-glow-cyan)]"
                   : "border-line bg-surface-2 text-fg-muted hover:border-line-strong hover:text-fg",
               )}
             >
-              <Icon className="size-6" />
-              {t.name}
+              <Icon className="size-6 shrink-0" />
+              <span className="break-words">{t.name}</span>
             </button>
           );
         })}
@@ -44,14 +44,14 @@ export function VehicleTypePicker({ error }: { error?: string }) {
 export function NewVehicleFields() {
   const { vehicle, setVehicle } = useCheckIn();
   return (
-    <div className="grid grid-cols-3 gap-3">
+    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
       <Field label="Marca">
         <Input value={vehicle.brand} onChange={(e) => setVehicle({ brand: e.target.value })} placeholder="Toyota" />
       </Field>
       <Field label="Modelo">
         <Input value={vehicle.model} onChange={(e) => setVehicle({ model: e.target.value })} placeholder="Yaris" />
       </Field>
-      <Field label="Color">
+      <Field label="Color" className="col-span-2 sm:col-span-1">
         <Input value={vehicle.color} onChange={(e) => setVehicle({ color: e.target.value })} placeholder="Gris" />
       </Field>
     </div>
@@ -63,7 +63,7 @@ export function CustomerFields({ errors }: { errors: CheckInErrors }) {
 
   if (match) {
     return (
-      <div className="grid gap-3 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <Field label="Celular (WhatsApp)" error={errors.phone}>
           <Input
             inputMode="tel"
@@ -83,7 +83,7 @@ export function CustomerFields({ errors }: { errors: CheckInErrors }) {
   }
 
   return (
-    <div className="grid gap-3 sm:grid-cols-2">
+    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
       <Field label="Nombre completo *" error={errors.full_name} className="sm:col-span-2">
         <Input
           value={customer.full_name}
@@ -100,7 +100,7 @@ export function CustomerFields({ errors }: { errors: CheckInErrors }) {
           placeholder="987 654 321"
         />
       </Field>
-      <div className="grid grid-cols-[96px_1fr] gap-2">
+      <div className="grid grid-cols-[92px_minmax(0,1fr)] gap-2">
         <Field label="Doc.">
           <Select
             value={customer.document_type}

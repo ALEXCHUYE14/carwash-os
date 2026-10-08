@@ -22,14 +22,14 @@ import { ServicePicker } from "./service-picker";
 function Step({ n, title, children, aside }: { n: number; title: string; children: React.ReactNode; aside?: React.ReactNode }) {
   return (
     <Card>
-      <div className="flex items-center justify-between gap-3 border-b border-line px-5 py-3.5">
-        <div className="flex items-center gap-3">
-          <span className="grid size-7 place-items-center rounded-lg bg-surface-3 text-[13px] font-bold text-fg-muted">{n}</span>
-          <h2 className="font-semibold">{title}</h2>
+      <div className="flex items-center justify-between gap-3 border-b border-line px-4 py-3 sm:px-5 sm:py-3.5">
+        <div className="flex min-w-0 items-center gap-3">
+          <span className="grid size-7 shrink-0 place-items-center rounded-lg bg-surface-3 text-[13px] font-bold text-fg-muted">{n}</span>
+          <h2 className="truncate font-semibold">{title}</h2>
         </div>
-        {aside}
+        {aside && <div className="shrink-0">{aside}</div>}
       </div>
-      <CardBody>{children}</CardBody>
+      <CardBody className="p-4 sm:p-5">{children}</CardBody>
     </Card>
   );
 }
@@ -80,8 +80,8 @@ export function CheckInScreen() {
   const operators = employees.filter((e) => e.is_active);
 
   return (
-    <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_380px]">
-      <div className="space-y-5">
+    <div className="grid grid-cols-1 gap-4 sm:gap-5 xl:grid-cols-[minmax(0,1fr)_380px]">
+      <div className="min-w-0 space-y-4 sm:space-y-5">
         <Step n={1} title="Vehículo">
           <div className="space-y-4">
             <PlateSearch error={errors.plate} />
@@ -109,7 +109,7 @@ export function CheckInScreen() {
           }
         >
           {showInspection ? (
-            <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_260px]">
+            <div className="grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1fr)_260px]">
               <InspectionDiagram
                 marks={state.marks}
                 view={state.activeView}
@@ -139,7 +139,7 @@ export function CheckInScreen() {
       </div>
 
       {/* ---------------- Resumen (sticky en tablet horizontal / desktop) ---------------- */}
-      <div className="xl:sticky xl:top-20 xl:self-start">
+      <div className="min-w-0 xl:sticky xl:top-20 xl:self-start">
         <Card>
           <CardHeader
             title="Resumen de la orden"
@@ -152,11 +152,11 @@ export function CheckInScreen() {
               <ul className="space-y-2">
                 {summary.lines.map((l) => (
                   <li key={l.service.id} className="flex items-baseline justify-between gap-3 text-sm">
-                    <span className={cn(l.service.is_addon && "text-fg-muted")}>
+                    <span className={cn("min-w-0 break-words", l.service.is_addon && "text-fg-muted")}>
                       {l.service.is_addon ? "+ " : ""}
                       {l.service.name}
                     </span>
-                    <span className="tabular">{money(l.price)}</span>
+                    <span className="shrink-0 tabular">{money(l.price)}</span>
                   </li>
                 ))}
                 {summary.reward > 0 && (
@@ -175,7 +175,7 @@ export function CheckInScreen() {
               </div>
               <div className="flex items-baseline justify-between">
                 <span className="font-semibold">Total</span>
-                <span className="text-3xl font-extrabold tracking-tight tabular">{money(settings?.prices_include_tax === false ? total + tax : total)}</span>
+                <span className="text-2xl font-extrabold tracking-tight tabular sm:text-3xl">{money(settings?.prices_include_tax === false ? total + tax : total)}</span>
               </div>
               <div className="flex items-center gap-1.5 text-xs text-fg-subtle">
                 <Clock className="size-3.5" /> Tiempo estimado: {duration(summary.minutes)}
@@ -197,7 +197,7 @@ export function CheckInScreen() {
               </div>
             )}
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 gap-3 min-[400px]:grid-cols-2">
               <Field label="Responsable">
                 <Select value={state.employeeId} onChange={(e) => state.set({ employeeId: e.target.value })}>
                   <option value="">Sin asignar</option>

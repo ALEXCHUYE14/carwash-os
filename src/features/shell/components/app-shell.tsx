@@ -133,7 +133,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         </div>
       </header>
 
-      <main className="mx-auto w-full max-w-[1600px] px-4 pt-5 pb-28 sm:px-6 lg:pb-10">{children}</main>
+      <main className="mx-auto w-full max-w-[1600px] min-w-0 px-4 pt-4 pb-[calc(6.5rem+env(safe-area-inset-bottom))] sm:px-6 sm:pt-5 lg:pb-10">{children}</main>
 
       {/* ---------- Bottom nav (móvil) ---------- */}
       <nav className="safe-bottom fixed inset-x-0 bottom-0 z-30 border-t border-line bg-surface/95 pt-1.5 backdrop-blur-md lg:hidden">
