@@ -3,10 +3,12 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Eye, EyeOff, ShieldCheck } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import { homeFor } from "@/features/auth/lib/rbac";
 import { getSupabase } from "@/shared/lib/supabase/client";
+import type { UserRole } from "@/shared/types/domain";
 import { SUPPORT_WHATSAPP_DISPLAY, supportWhatsappUrl } from "@/shared/lib/support";
 import { BrandLogo } from "@/shared/ui/brand-logo";
 import { Button } from "@/shared/ui/button";
@@ -20,8 +22,9 @@ const schema = z.object({
 type Values = z.infer<typeof schema>;
 
 /** Solo rutas internas: evita que ?next=https://sitio-malicioso redirija fuera del sistema. */
-function safeNext(value: string | null): string {
-  if (!value || !value.startsWith("/") || value.startsWith("//") || value.startsWith("/\\")) return "/";
+function safeNext(value: string | null): string | null {
+  if (!value || !value.startsWith("/") || value.startsWith("//") || value.startsWith("/\\")) return null;
+  if (value === "/" || value.startsWith("/login")) return null;
   return value;
 }
 
@@ -48,6 +51,10 @@ export function LoginForm() {
   );
   const [notice, setNotice] = useState<string | null>(null);
   const [sendingReset, setSendingReset] = useState(false);
+  // Mantiene el botón en "Ingresando…" hasta que la pantalla de destino termine de cargar
+  // (antes se reactivaba al instante y parecía que no pasaba nada, invitando a un 2.º clic).
+  const [navigating, startNavigation] = useTransition();
+  const [redirecting, setRedirecting] = useState(false);
   const { register, handleSubmit, formState, getValues, trigger } = useForm<Values>({ resolver: zodResolver(schema) });
 
   const forgotPassword = async () => {
@@ -69,22 +76,59 @@ export function LoginForm() {
   };
 
   const onSubmit = handleSubmit(async (values) => {
+    if (redirecting) return;
     setError(null);
     try {
-      const { error: err } = await getSupabase().auth.signInWithPassword({
+      const sb = getSupabase();
+      const { data, error: err } = await sb.auth.signInWithPassword({
         email: values.email,
         password: values.password,
       });
-      if (err) {
-        setError(translateAuthError(err.message));
+      if (err || !data.user) {
+        setError(translateAuthError(err?.message ?? "No se pudo iniciar sesión."));
         return;
       }
-      router.replace(safeNext(params.get("next")));
-      router.refresh();
+
+      // Se va DIRECTO a la pantalla del rol (sin pasar por "/", que costaba una redirección más).
+      // La consulta va del navegador a Supabase y la protege RLS (cada usuario solo lee su perfil).
+      const { data: profile, error: profileError } = await sb
+        .from("profiles")
+        .select("role, is_active")
+        .eq("id", data.user.id)
+        .maybeSingle<{ role: UserRole; is_active: boolean }>();
+
+      // Sin perfil o desactivado: el sistema lo devolvería al login; se informa y se cierra la sesión.
+      // (Si la consulta falló por red, no se concluye nada: "/" deja que el servidor decida.)
+      if (!profileError && (!profile || !profile.is_active)) {
+        await sb.auth.signOut();
+        setError(
+          profile
+            ? "Tu usuario está desactivado. Contacta a gerencia o a soporte."
+            : "Tu usuario no tiene un perfil asignado. Contacta a soporte.",
+        );
+        return;
+      }
+
+      const destination = safeNext(params.get("next")) ?? (profile ? homeFor(profile.role) : "/");
+      setRedirecting(true);
+      // Sin router.refresh(): la ruta de destino es dinámica y se renderiza fresca una sola vez
+      // (antes se pedía dos veces al servidor).
+      startNavigation(() => router.replace(destination));
     } catch (e) {
+      setRedirecting(false);
       setError(translateAuthError(e instanceof Error ? e.message : "Ocurrió un error inesperado."));
     }
   });
+
+  // Red de seguridad: si la navegación terminó y seguimos en el login (p. ej. el servidor lo devolvió),
+  // el botón se reactiva en vez de quedarse en "Ingresando…".
+  useEffect(() => {
+    if (navigating || !redirecting) return;
+    const t = setTimeout(() => setRedirecting(false), 1500);
+    return () => clearTimeout(t);
+  }, [navigating, redirecting]);
+
+  const busy = formState.isSubmitting || navigating || redirecting;
 
   return (
     <div className="w-full max-w-[400px]">
@@ -147,8 +191,8 @@ export function LoginForm() {
               {notice}
             </p>
           )}
-          <Button type="submit" size="lg" loading={formState.isSubmitting} className="mt-1">
-            Ingresar
+          <Button type="submit" size="lg" loading={busy} className="mt-1">
+            {redirecting ? "Ingresando…" : "Ingresar"}
           </Button>
         </form>
 
