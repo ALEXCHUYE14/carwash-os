@@ -3,7 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Suspense } from "react";
 import { LoginForm } from "@/features/auth/components/login-form";
-import loginBg from "../../../../public/img/logo.webp";
+import loginBg from "../../../../public/img/login-detailing.webp";
 
 export const metadata: Metadata = { title: "Ingresar" };
 
@@ -17,7 +17,7 @@ export default function LoginPage() {
   return (
     <main className="grid min-h-dvh bg-bg lg:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)]">
       {/* Panel de marca (solo escritorio) */}
-      <aside className="relative hidden overflow-hidden text-white lg:flex lg:flex-col lg:justify-between lg:p-12 xl:p-16">
+      <aside className="relative isolate hidden overflow-hidden bg-[#0b141d] text-white lg:flex lg:flex-col lg:justify-between lg:p-12 xl:p-16">
         {/* Import estático → Next lo optimiza (AVIF/WebP) y genera un blur mientras carga */}
         <Image
           src={loginBg}
@@ -26,12 +26,14 @@ export default function LoginPage() {
           priority
           placeholder="blur"
           sizes="(min-width: 1024px) 52vw, 0px"
-          className="-z-20 object-cover object-[35%_center]"
+          className="-z-20 object-cover object-[50%_55%]"
         />
         <div
           aria-hidden
-          className="absolute inset-0 -z-10 bg-[linear-gradient(180deg,rgb(8_17_28/0.55)_0%,rgb(8_17_28/0.35)_40%,rgb(8_17_28/0.92)_100%)]"
+          className="absolute inset-0 -z-10 bg-[linear-gradient(180deg,rgb(8_17_28/0.6)_0%,rgb(8_17_28/0.35)_35%,rgb(8_17_28/0.9)_100%)]"
         />
+        {/* Oscurece el lado izquierdo, donde va el texto, sin apagar al operario de la derecha */}
+        <div aria-hidden className="absolute inset-0 -z-10 bg-gradient-to-r from-[rgb(8_17_28/0.7)] via-[rgb(8_17_28/0.3)] to-transparent" />
 
         <div className="flex items-center gap-2.5 text-sm font-semibold tracking-tight">
           <span aria-hidden className="size-2 rounded-full bg-[#5fd4c4] shadow-[0_0_0_4px_rgb(95_212_196/0.18)]" />
@@ -60,7 +62,7 @@ export default function LoginPage() {
       <section className="relative flex min-h-dvh flex-col px-5 py-8 sm:px-10">
         {/* Franja con la foto en móvil/tablet: mantiene la identidad visual sin tapar el formulario */}
         <div className="relative -mx-5 -mt-8 mb-8 h-36 overflow-hidden sm:-mx-10 sm:h-44 lg:hidden">
-          <Image src={loginBg} alt="" fill priority placeholder="blur" sizes="(max-width: 1023px) 100vw, 0px" className="object-cover object-[40%_60%]" />
+          <Image src={loginBg} alt="" fill priority placeholder="blur" sizes="(max-width: 1023px) 100vw, 0px" className="object-cover object-[50%_45%]" />
           <div aria-hidden className="absolute inset-0 bg-gradient-to-b from-[rgb(8_17_28/0.25)] to-bg" />
         </div>
 
