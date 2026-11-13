@@ -1,9 +1,9 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Eye, EyeOff, ShieldCheck } from "lucide-react";
+import { AlertCircle, ArrowRight, CheckCircle2, Eye, EyeOff, LifeBuoy, Lock, Mail } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useState, useTransition } from "react";
+import { type KeyboardEvent, useEffect, useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { homeFor } from "@/features/auth/lib/rbac";
@@ -12,7 +12,7 @@ import type { UserRole } from "@/shared/types/domain";
 import { SUPPORT_WHATSAPP_DISPLAY, supportWhatsappUrl } from "@/shared/lib/support";
 import { BrandLogo } from "@/shared/ui/brand-logo";
 import { Button } from "@/shared/ui/button";
-import { Field, Input } from "@/shared/ui/input";
+import { Input } from "@/shared/ui/input";
 
 const schema = z.object({
   // trim antes de validar: el autocompletado del celular suele añadir un espacio al final
@@ -40,6 +40,8 @@ export function LoginForm() {
   const router = useRouter();
   const params = useSearchParams();
   const [showPassword, setShowPassword] = useState(false);
+  const [capsLock, setCapsLock] = useState(false);
+  const detectCapsLock = (e: KeyboardEvent<HTMLInputElement>) => setCapsLock(e.getModifierState?.("CapsLock") ?? false);
   const [error, setError] = useState<string | null>(
     params.get("error") === "inactive"
       ? "Tu usuario no tiene un rol activo. Contacta a gerencia o a soporte."
@@ -131,94 +133,134 @@ export function LoginForm() {
   const busy = formState.isSubmitting || navigating || redirecting;
 
   return (
-    <div className="w-full max-w-[400px]">
-      <div className="rounded-2xl border border-white/40 bg-surface/95 p-7 shadow-2xl backdrop-blur-md sm:p-8">
-        <div className="mb-7 flex items-center gap-3">
-          <BrandLogo priority className="h-14 w-[76px] rounded-2xl shadow-sm" />
-          <div>
-            <h1 className="text-lg font-bold tracking-tight">CarWash OS</h1>
-            <p className="text-[13px] text-fg-subtle">Ingresa con tu cuenta de personal</p>
-          </div>
+    <div className="w-full max-w-[380px]">
+      <div className="flex items-center gap-3">
+        <BrandLogo priority className="h-11 w-[60px] rounded-xl" />
+        <div className="leading-tight">
+          <p className="text-[15px] font-bold tracking-tight">CarWash OS</p>
+          <p className="text-xs text-fg-subtle">Car Wash & Auto Detailing</p>
         </div>
+      </div>
 
-        <form onSubmit={onSubmit} className="flex flex-col gap-4" noValidate>
-          <Field label="Correo" error={formState.errors.email?.message} htmlFor="email">
+      <h1 className="mt-9 text-[1.75rem] font-bold leading-tight tracking-[-0.02em]">Inicia sesión</h1>
+      <p className="mt-1.5 text-[15px] text-fg-muted">Usa el correo y la contraseña que te asignó gerencia.</p>
+
+      {error && (
+        <div role="alert" className="mt-6 flex gap-2.5 rounded-xl border border-rose/25 bg-rose-soft px-3.5 py-3 text-sm text-rose">
+          <AlertCircle className="mt-px size-4 shrink-0" aria-hidden />
+          <span>{error}</span>
+        </div>
+      )}
+      {notice && (
+        <div role="status" className="mt-6 flex gap-2.5 rounded-xl border border-emerald/25 bg-emerald-soft px-3.5 py-3 text-sm text-emerald">
+          <CheckCircle2 className="mt-px size-4 shrink-0" aria-hidden />
+          <span>{notice}</span>
+        </div>
+      )}
+
+      <form onSubmit={onSubmit} className="mt-7 flex flex-col gap-5" noValidate>
+        <div className="flex flex-col gap-1.5">
+          <label htmlFor="email" className="text-sm font-semibold text-fg">
+            Correo electrónico
+          </label>
+          <div className="relative">
+            <Mail aria-hidden className="pointer-events-none absolute left-3.5 top-1/2 size-[18px] -translate-y-1/2 text-fg-subtle" />
             <Input
               id="email"
               type="email"
               autoComplete="email"
               inputMode="email"
+              autoCapitalize="none"
+              spellCheck={false}
               autoFocus
+              placeholder="nombre@empresa.com"
+              className="h-12 pl-11"
               aria-invalid={!!formState.errors.email}
+              aria-describedby={formState.errors.email ? "email-error" : undefined}
               {...register("email")}
             />
-          </Field>
-          <Field label="Contraseña" error={formState.errors.password?.message} htmlFor="password">
-            <div className="relative">
-              <Input
-                id="password"
-                type={showPassword ? "text" : "password"}
-                autoComplete="current-password"
-                className="pr-11"
-                aria-invalid={!!formState.errors.password}
-                {...register("password")}
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword((s) => !s)}
-                className="absolute inset-y-0 right-0 grid w-11 place-items-center rounded-r-xl text-fg-subtle hover:text-fg"
-                aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
-              >
-                {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
-              </button>
-            </div>
-          </Field>
-          <button
-            type="button"
-            onClick={forgotPassword}
-            disabled={sendingReset}
-            className="-mt-1 self-end text-xs font-semibold text-cyan hover:underline disabled:opacity-50"
-          >
-            {sendingReset ? "Enviando enlace…" : "¿Olvidaste tu contraseña?"}
-          </button>
-          {error && (
-            <p role="alert" className="rounded-xl border border-rose/30 bg-rose-soft px-3 py-2 text-sm text-rose">
-              {error}
+          </div>
+          {formState.errors.email && (
+            <p id="email-error" className="text-xs font-medium text-rose">
+              {formState.errors.email.message}
             </p>
           )}
-          {notice && (
-            <p role="status" className="rounded-xl border border-emerald/30 bg-emerald-soft px-3 py-2 text-sm text-emerald">
-              {notice}
-            </p>
-          )}
-          <Button type="submit" size="lg" loading={busy} className="mt-1">
-            {redirecting ? "Ingresando…" : "Ingresar"}
-          </Button>
-        </form>
+        </div>
 
-        <div className="mt-6 flex flex-col items-center gap-2.5 text-center">
-          <p className="inline-flex items-center gap-1.5 text-[13px] text-[#5b7c99]">
-            <ShieldCheck className="size-4 shrink-0" aria-hidden />
-            Acceso exclusivo del personal autorizado
-          </p>
+        <div className="flex flex-col gap-1.5">
+          <div className="flex items-baseline justify-between gap-3">
+            <label htmlFor="password" className="text-sm font-semibold text-fg">
+              Contraseña
+            </label>
+            <button
+              type="button"
+              onClick={forgotPassword}
+              disabled={sendingReset}
+              className="text-[13px] font-semibold text-cyan underline-offset-4 hover:underline disabled:opacity-50"
+            >
+              {sendingReset ? "Enviando enlace…" : "¿La olvidaste?"}
+            </button>
+          </div>
+          <div className="relative">
+            <Lock aria-hidden className="pointer-events-none absolute left-3.5 top-1/2 size-[18px] -translate-y-1/2 text-fg-subtle" />
+            <Input
+              id="password"
+              type={showPassword ? "text" : "password"}
+              autoComplete="current-password"
+              placeholder="••••••••"
+              className="h-12 pl-11 pr-12"
+              aria-invalid={!!formState.errors.password}
+              aria-describedby={formState.errors.password ? "password-error" : capsLock ? "caps-warning" : undefined}
+              onKeyDown={detectCapsLock}
+              onKeyUp={detectCapsLock}
+              {...register("password", { onBlur: () => setCapsLock(false) })}
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword((s) => !s)}
+              className="absolute inset-y-0 right-0 grid w-12 place-items-center rounded-r-xl text-fg-subtle transition-colors hover:text-fg"
+              aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+              aria-pressed={showPassword}
+            >
+              {showPassword ? <EyeOff className="size-[18px]" /> : <Eye className="size-[18px]" />}
+            </button>
+          </div>
+          {formState.errors.password ? (
+            <p id="password-error" className="text-xs font-medium text-rose">
+              {formState.errors.password.message}
+            </p>
+          ) : capsLock ? (
+            <p id="caps-warning" className="text-xs font-medium text-amber">
+              Bloq Mayús está activado
+            </p>
+          ) : null}
+        </div>
+
+        <Button type="submit" size="lg" loading={busy} className="mt-2 h-12 w-full">
+          {redirecting ? "Ingresando…" : (
+            <>
+              Ingresar
+              <ArrowRight aria-hidden />
+            </>
+          )}
+        </Button>
+      </form>
+
+      <div className="mt-8 flex items-center gap-3 border-t border-line pt-5 text-[13px] text-fg-muted">
+        <LifeBuoy className="size-4 shrink-0 text-fg-subtle" aria-hidden />
+        <span>
+          ¿No puedes acceder?{" "}
           <a
             href={supportWhatsappUrl()}
             target="_blank"
             rel="noopener noreferrer"
             title={`WhatsApp ${SUPPORT_WHATSAPP_DISPLAY}`}
-            className="inline-flex min-h-11 items-center gap-2 rounded-lg px-2 text-[15px] font-medium text-[#14805e] underline-offset-4 transition-colors hover:text-[#0f6b4e] hover:underline"
+            className="font-semibold text-emerald underline-offset-4 hover:underline"
           >
-            ¿Problemas para acceder? Contactar soporte
+            Escribe a soporte
           </a>
-        </div>
+        </span>
       </div>
-
-      <p className="mt-5 text-center text-[13px] text-white/85">
-        ¿Eres cliente?{" "}
-        <a href="/seguimiento" className="font-semibold text-white underline-offset-2 hover:underline">
-          Sigue tu vehículo por placa
-        </a>
-      </p>
     </div>
   );
 }
